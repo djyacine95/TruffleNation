@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Ntc-OsXV-FnGUOAyjOGBg"
+uri = "file://artifacts/trufflenation/public/hero-truffles.png"
+type = "image"
+title = "hero truffles dark moody"

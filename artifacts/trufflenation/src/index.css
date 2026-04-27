@@ -1,0 +1,166 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --button-outline: rgba(0,0,0, .10);
+  --badge-outline: rgba(0,0,0, .05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0,0,0, .03);
+  --elevate-2: rgba(0,0,0, .08);
+
+  /* Parchment background */
+  --background: 40 30% 95%;
+  --foreground: 148 40% 12%;
+
+  --border: 40 20% 85%;
+  --card: 40 33% 97%;
+  --card-foreground: 148 40% 12%;
+  --card-border: 40 20% 85%;
+
+  --popover: 40 33% 97%;
+  --popover-foreground: 148 40% 12%;
+  --popover-border: 40 20% 85%;
+
+  /* Deep forest green */
+  --primary: 148 40% 16%;
+  --primary-foreground: 40 30% 95%;
+
+  /* Earthy amber */
+  --secondary: 35 80% 50%;
+  --secondary-foreground: 40 30% 95%;
+
+  --muted: 40 20% 88%;
+  --muted-foreground: 148 20% 40%;
+
+  --accent: 35 80% 50%;
+  --accent-foreground: 40 30% 95%;
+
+  --destructive: 0 70% 40%;
+  --destructive-foreground: 40 30% 95%;
+
+  --input: 40 20% 80%;
+  --ring: 148 40% 16%;
+  
+  --app-font-sans: 'Outfit', sans-serif;
+  --app-font-serif: 'Playfair Display', serif;
+  --app-font-mono: Menlo, monospace;
+  --radius: 0.25rem;
+
+  --sidebar: 148 40% 14%;
+  --sidebar-foreground: 40 30% 95%;
+  --sidebar-border: 148 40% 12%;
+  --sidebar-primary: 35 80% 50%;
+  --sidebar-primary-foreground: 40 30% 95%;
+  --sidebar-accent: 148 30% 20%;
+  --sidebar-accent-foreground: 40 30% 95%;
+  --sidebar-ring: 35 80% 50%;
+
+  --shadow-sm: 0px 2px 4px rgba(22, 43, 30, 0.05);
+  --shadow: 0px 4px 8px rgba(22, 43, 30, 0.05);
+  --shadow-md: 0px 8px 16px rgba(22, 43, 30, 0.08);
+  --shadow-lg: 0px 16px 32px rgba(22, 43, 30, 0.1);
+}
+
+.dark {
+  --background: 148 40% 8%;
+  --foreground: 40 30% 95%;
+
+  --border: 148 30% 20%;
+  --card: 148 35% 12%;
+  --card-foreground: 40 30% 95%;
+  --card-border: 148 30% 20%;
+
+  --popover: 148 35% 12%;
+  --popover-foreground: 40 30% 95%;
+  --popover-border: 148 30% 20%;
+
+  --primary: 35 80% 50%;
+  --primary-foreground: 148 40% 12%;
+
+  --secondary: 148 20% 25%;
+  --secondary-foreground: 40 30% 95%;
+
+  --muted: 148 30% 15%;
+  --muted-foreground: 40 20% 70%;
+
+  --accent: 35 80% 50%;
+  --accent-foreground: 148 40% 12%;
+
+  --destructive: 0 60% 40%;
+  --destructive-foreground: 40 30% 95%;
+
+  --input: 148 30% 25%;
+  --ring: 35 80% 50%;
+
+  --sidebar: 148 40% 8%;
+  --sidebar-foreground: 40 30% 95%;
+  --sidebar-border: 148 30% 15%;
+  --sidebar-primary: 35 80% 50%;
+  --sidebar-primary-foreground: 148 40% 12%;
+  --sidebar-accent: 148 30% 15%;
+  --sidebar-accent-foreground: 40 30% 95%;
+  --sidebar-ring: 35 80% 50%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-tight;
+  }
+}
