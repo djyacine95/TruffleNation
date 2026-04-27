@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === "production") {
 
   // SPA fallback — send index.html for any non-API route so client-side
   // routing (wouter) works on direct URL loads and refreshes.
-  app.get("*", (_req, res) => {
+  app.get("*path", (_req, res) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
