@@ -2,22 +2,25 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
+  "workspaces": [
+    "artifacts/*",
+    "lib/*",
+    "scripts"
+  ],
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "build:prod": "pnpm --filter @workspace/trufflenation run build && pnpm --filter @workspace/api-server run build",
-    "start": "NODE_ENV=production pnpm --filter @workspace/api-server run start",
-    "dev:api": "pnpm --filter @workspace/api-server run dev",
-    "dev:web": "pnpm --filter @workspace/trufflenation run dev",
-    "db:push": "pnpm --filter @workspace/db run push",
-    "codegen": "pnpm --filter @workspace/api-spec run codegen"
+    "typecheck": "npm run typecheck:libs && npm run typecheck --workspaces --if-present",
+    "build": "npm run typecheck && npm run build --workspaces --if-present",
+    "build:prod": "npm run build --workspace=@workspace/trufflenation && npm run build --workspace=@workspace/api-server",
+    "start": "NODE_ENV=production npm run start --workspace=@workspace/api-server",
+    "dev:api": "npm run dev --workspace=@workspace/api-server",
+    "dev:web": "npm run dev --workspace=@workspace/trufflenation",
+    "db:push": "npm run push --workspace=@workspace/db",
+    "codegen": "npm run codegen --workspace=@workspace/api-spec"
   },
   "private": true,
   "devDependencies": {
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
-  },
-  "packageManager": "pnpm@10.26.1"
+  }
 }

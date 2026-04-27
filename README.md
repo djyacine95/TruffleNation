@@ -6,7 +6,7 @@ A full-stack premium truffle marketplace connecting foragers, commercial supplie
 
 | Layer | Technology |
 |---|---|
-| Monorepo | pnpm workspaces |
+| Monorepo | npm workspaces (compatible with pnpm for local dev) |
 | Backend | Node.js 20+, Express 5 |
 | Database | PostgreSQL (Neon recommended) + Drizzle ORM |
 | Auth | Clerk |
@@ -26,6 +26,8 @@ lib/
   db/               Drizzle ORM schema + migrations
 ```
 
+> **Package manager note:** The `package.json` files use standard npm workspace format — no pnpm-specific `catalog:` references or `workspace:*` protocol. This means both `npm install` (for deployment) and `pnpm install` (for local dev) work with the same files.
+
 ---
 
 ## Local Development
@@ -33,7 +35,7 @@ lib/
 ### Prerequisites
 
 - **Node.js 20+**
-- **pnpm 10+** — `npm install -g pnpm`
+- **pnpm 10+** — `npm install -g pnpm` (recommended for local dev; faster installs via cache)
 - A **PostgreSQL** database (local or [Neon free tier](https://neon.tech))
 - A **Clerk** account — [clerk.com](https://clerk.com) (free tier works)
 
@@ -45,7 +47,7 @@ cd trufflenation
 pnpm install
 ```
 
-> **Note for Mac / Windows users:** The `pnpm-workspace.yaml` contains esbuild platform overrides that target Linux only (for the production environment). If `pnpm install` fails on your machine due to missing native binaries, remove the `overrides` block for `esbuild` from `pnpm-workspace.yaml`, then run `pnpm install` again. These overrides are safe to leave in place for Linux CI and production.
+> **Note:** `npm install` also works locally, but pnpm is recommended for its faster installs and better caching.
 
 ### 2. Set up environment variables
 
@@ -65,6 +67,7 @@ Edit `.env` with your values:
 
 ```bash
 pnpm db:push
+# or: npm run db:push
 ```
 
 This runs `drizzle-kit push` against your `DATABASE_URL`.
@@ -73,6 +76,7 @@ This runs `drizzle-kit push` against your `DATABASE_URL`.
 
 ```bash
 pnpm --filter @workspace/db run seed
+# or: npm run seed --workspace=@workspace/db
 ```
 
 This adds 3 demo sellers and 8 truffle product listings.
@@ -86,7 +90,7 @@ Open two terminals:
 PORT=8080 pnpm dev:api
 
 # Terminal 2 — Frontend (http://localhost:3000, proxies /api → :8080)
-PORT=3000 pnpm dev:web
+PORT=3000 BASE_PATH=/ pnpm dev:web
 ```
 
 Then open [http://localhost:3000](http://localhost:3000).
@@ -95,7 +99,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ## Deployment on Render
 
-This project is designed to deploy as a **single Render web service**. The Express server builds the frontend and serves it as static files, so you only need one service.
+This project deploys as a **single Render web service**. The Express server builds the frontend and serves it as static files in production.
 
 ### Step 1 — Create a Neon database
 
@@ -119,8 +123,8 @@ git push origin main
 | Setting | Value |
 |---|---|
 | **Runtime** | Node |
-| **Build Command** | `pnpm install --frozen-lockfile && pnpm build:prod` |
-| **Start Command** | `pnpm start` |
+| **Build Command** | `npm install && npm run build:prod` |
+| **Start Command** | `npm run start` |
 
 4. Under **Environment Variables**, add:
 
@@ -133,38 +137,38 @@ git push origin main
 | `VITE_CLERK_PUBLISHABLE_KEY` | From Clerk dashboard |
 | `VITE_CLERK_PROXY_URL` | `https://your-render-url.onrender.com/api/__clerk` |
 
-5. Deploy — Render will install, build both the API and frontend, and start the server.
+5. Deploy — Render will install all packages, build both the API and frontend, then start the server.
 
-### What `pnpm build:prod` does
+### What `npm run build:prod` does
 
-1. **Frontend**: runs `vite build` → outputs static files to `artifacts/trufflenation/dist/public/`
-2. **API server**: runs `esbuild` → outputs bundled server to `artifacts/api-server/dist/`
+1. **Frontend**: runs `vite build` → static files output to `artifacts/trufflenation/dist/public/`
+2. **API server**: runs `esbuild` → bundled server output to `artifacts/api-server/dist/`
 
-In production, Express serves the frontend static files and handles the SPA fallback (all non-`/api` routes return `index.html`).
+In production, Express serves the compiled frontend files and sends `index.html` for any non-`/api` route (SPA fallback for client-side routing).
 
 ### Step 4 — Run the database migration
 
-After the first deploy, run the schema push once from your local machine pointing at the production database:
+After the first deploy, push the schema once from your local machine:
 
 ```bash
 DATABASE_URL="your-neon-connection-string" pnpm db:push
 ```
 
-Or use Neon's SQL editor to verify the schema is correct.
+Or use Neon's SQL editor to verify the schema.
 
 ---
 
-## Key npm Scripts
+## Key Scripts
 
 | Command | Description |
 |---|---|
-| `pnpm dev:api` | Start API server in development mode |
-| `pnpm dev:web` | Start frontend dev server |
-| `pnpm build:prod` | Build frontend + API server for production |
-| `pnpm start` | Start API server in production (serves frontend too) |
-| `pnpm db:push` | Sync Drizzle schema to the database |
-| `pnpm codegen` | Regenerate API client hooks from OpenAPI spec |
-| `pnpm typecheck` | Run TypeScript checks across all packages |
+| `pnpm dev:api` / `npm run dev:api` | Start API server in development mode |
+| `pnpm dev:web` / `npm run dev:web` | Start frontend dev server |
+| `npm run build:prod` | Build frontend + API server for production |
+| `npm run start` | Start API server in production (serves frontend too) |
+| `pnpm db:push` / `npm run db:push` | Sync Drizzle schema to the database |
+| `pnpm codegen` / `npm run codegen` | Regenerate API client hooks from OpenAPI spec |
+| `pnpm typecheck` / `npm run typecheck` | Run TypeScript checks across all packages |
 
 ---
 
@@ -180,6 +184,7 @@ If you change the OpenAPI spec at `lib/api-spec/openapi.yaml`:
 
 ```bash
 pnpm codegen
+# or: npm run codegen
 ```
 
 This regenerates the React Query hooks in `lib/api-client-react/src/generated/` and the Zod schemas in `lib/api-zod/src/generated/`.
