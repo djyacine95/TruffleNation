@@ -76,5 +76,6 @@
   },
   "dependencies": {
     "@clerk/react": "^6.2.1"
-  }
+  },
+  "packageManager": "pnpm@9.0.0"
 }
