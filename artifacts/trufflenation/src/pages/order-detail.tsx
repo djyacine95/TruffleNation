@@ -1,8 +1,18 @@
+import { useState } from "react";
 import { PageLayout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Link, useParams } from "wouter";
 import {
   useGetOrder,
@@ -13,7 +23,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@clerk/react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Ban } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -26,12 +36,18 @@ const STATUS_COLORS: Record<string, string> = {
 
 const ORDER_STATUSES = ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"] as const;
 
+function mutationErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  return "Something went wrong. Please try again.";
+}
+
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
   const orderId = Number(params.id);
   const { user } = useUser();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
   const { data: order, isLoading } = useGetOrder(orderId, {
     query: { enabled: !!orderId, queryKey: getGetOrderQueryKey(orderId) },
@@ -40,15 +56,51 @@ export default function OrderDetailPage() {
   const updateStatus = useUpdateOrderStatus();
 
   const isSeller = order?.sellerUserId === user?.id;
+  const isBuyer = order?.buyerUserId === user?.id;
+  const canBuyerCancel =
+    !!order &&
+    isBuyer &&
+    (order.status === "pending" || order.status === "confirmed");
 
   const handleStatusUpdate = (status: string) => {
     updateStatus.mutate(
-      { id: orderId, data: { status: status as any } },
+      { id: orderId, data: { status: status as (typeof ORDER_STATUSES)[number] } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetOrderQueryKey(orderId) });
           queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
           toast({ title: "Order updated", description: `Status changed to ${status}` });
+        },
+        onError: (err) => {
+          toast({
+            title: "Could not update order",
+            description: mutationErrorMessage(err),
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  const handleBuyerCancel = () => {
+    updateStatus.mutate(
+      { id: orderId, data: { status: "cancelled" } },
+      {
+        onSuccess: () => {
+          setCancelDialogOpen(false);
+          queryClient.invalidateQueries({ queryKey: getGetOrderQueryKey(orderId) });
+          queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
+          toast({
+            title: "Order cancelled",
+            description: "Your order has been cancelled. The seller has been notified by status update.",
+          });
+        },
+        onError: (err) => {
+          toast({
+            title: "Could not cancel order",
+            description: mutationErrorMessage(err),
+            variant: "destructive",
+          });
         },
       }
     );
@@ -97,11 +149,58 @@ export default function OrderDetailPage() {
           </Badge>
         </div>
 
-        {isSeller && (
+        {canBuyerCancel && (
+          <>
+            <div className="mb-8 p-4 bg-card border border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Need to cancel?</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  You can cancel while the order is still pending or confirmed (before it moves into processing).
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-none border-destructive/50 text-destructive hover:bg-destructive/10 shrink-0 gap-2"
+                data-testid="button-cancel-order"
+                onClick={() => setCancelDialogOpen(true)}
+              >
+                <Ban className="h-4 w-4" aria-hidden />
+                Cancel order
+              </Button>
+            </div>
+            <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+              <AlertDialogContent className="rounded-none">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="font-serif">Cancel this order?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground leading-relaxed">
+                    This will mark order #{order.id} as cancelled. You cannot undo this from the buyer
+                    account. If you paid outside this demo, contact the seller or support separately.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="gap-2 sm:gap-0">
+                  <AlertDialogCancel className="rounded-none mt-0">Keep order</AlertDialogCancel>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="rounded-none"
+                    data-testid="button-confirm-cancel-order"
+                    disabled={updateStatus.isPending}
+                    onClick={handleBuyerCancel}
+                  >
+                    {updateStatus.isPending ? "Cancelling…" : "Yes, cancel order"}
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </>
+        )}
+
+        {isSeller && order.status !== "delivered" && order.status !== "cancelled" && (
           <div className="mb-8 p-4 bg-card border border-border">
-            <p className="text-sm font-semibold text-foreground mb-3">Update Order Status</p>
+            <p className="text-sm font-semibold text-foreground mb-3">Update order status</p>
             <div className="flex gap-3 items-center">
-              <Select defaultValue={order.status} onValueChange={handleStatusUpdate}>
+              <Select key={order.status} defaultValue={order.status} onValueChange={handleStatusUpdate}>
                 <SelectTrigger data-testid="select-order-status" className="w-48 rounded-none">
                   <SelectValue />
                 </SelectTrigger>
@@ -144,8 +243,8 @@ export default function OrderDetailPage() {
 
         {order.notes && (
           <div className="p-4 border border-border bg-card">
-            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Notes</p>
-            <p className="text-foreground italic">{order.notes}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Notes and payment reference</p>
+            <p className="text-foreground text-sm whitespace-pre-line leading-relaxed">{order.notes}</p>
           </div>
         )}
       </div>

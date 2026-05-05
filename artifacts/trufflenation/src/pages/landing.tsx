@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import { useGetFeaturedProducts, useGetProductCategories } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, Shield, Leaf, Clock } from "lucide-react";
+import { SafeImage } from "@/components/safe-image";
 
 function HeroSection() {
   return (
@@ -32,6 +33,20 @@ function HeroSection() {
               <Link href="/sign-up">Get Started</Link>
             </Button>
           </div>
+          <p className="mt-8 text-sm text-primary-foreground/65">
+            New to truffles?{" "}
+            <Link href="/truffles" className="text-secondary font-semibold underline-offset-4 hover:underline">
+              Read the field guide
+            </Link>
+            {" · "}
+            <Link href="/truffle-map" className="text-secondary font-semibold underline-offset-4 hover:underline">
+              See global seasons
+            </Link>
+            {" · "}
+            <Link href="/truffles/videos" className="text-secondary font-semibold underline-offset-4 hover:underline">
+              Watch videos
+            </Link>
+          </p>
         </div>
 
         {/* Image side */}
@@ -60,13 +75,24 @@ function TrustBanner() {
           {[
             { icon: Shield, title: "Authenticated Origins", desc: "Every listing verified against certified provenance records" },
             { icon: Leaf, title: "Harvested to Order", desc: "Fresh truffles foraged or picked within 48 hours of shipping" },
-            { icon: Clock, title: "Seasonal Availability", desc: "Real-time stock from active foragers across Europe and North America" },
+            {
+              icon: Clock,
+              title: "Seasonal Availability",
+              desc: "Real-time stock from active foragers across Europe and North America",
+              href: "/truffle-map",
+              linkLabel: "View seasonal map",
+            },
           ].map((item) => (
             <div key={item.title} className="flex items-start gap-4">
               <item.icon className="w-5 h-5 text-secondary mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-foreground text-sm">{item.title}</p>
                 <p className="text-muted-foreground text-sm mt-1">{item.desc}</p>
+                {"href" in item && item.href ? (
+                  <Link href={item.href} className="text-secondary text-sm font-medium mt-2 inline-block hover:underline">
+                    {item.linkLabel}
+                  </Link>
+                ) : null}
               </div>
             </div>
           ))}
@@ -104,14 +130,13 @@ function FeaturedProducts() {
               <Link key={product.id} href={`/shop/${product.id}`}>
                 <Card className="group overflow-hidden rounded-none border-border hover:border-primary/30 transition-all duration-300 hover:shadow-lg cursor-pointer" data-testid={`card-product-${product.id}`}>
                   <div className="aspect-[4/3] bg-primary/5 flex items-center justify-center overflow-hidden relative">
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    ) : (
-                      <div className="text-primary/30 font-serif italic text-sm text-center p-4">
-                        <div className="text-4xl mb-2">♦</div>
-                        {product.category}
-                      </div>
-                    )}
+                    <SafeImage
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      fallbackTitle={product.category}
+                      fallbackSubtitle="Featured truffle"
+                    />
                     {product.isFeatured && (
                       <Badge className="absolute top-3 left-3 rounded-none bg-secondary text-secondary-foreground border-0 text-xs">Featured</Badge>
                     )}

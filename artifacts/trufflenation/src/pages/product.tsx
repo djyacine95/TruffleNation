@@ -15,6 +15,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ShoppingCart, MapPin, Calendar, Package } from "lucide-react";
+import { SafeImage } from "@/components/safe-image";
 
 export default function ProductPage() {
   const params = useParams<{ id: string }>();
@@ -97,14 +98,13 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
           {/* Image */}
           <div className="aspect-square bg-primary/5 flex items-center justify-center overflow-hidden" data-testid="img-product">
-            {product.imageUrl ? (
-              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="text-primary/20 text-center">
-                <div className="text-8xl font-serif italic mb-4">♦</div>
-                <p className="font-serif italic text-sm">{product.category}</p>
-              </div>
-            )}
+            <SafeImage
+              src={product.imageUrl}
+              alt={product.name}
+              className="w-full h-full object-cover"
+              fallbackTitle={product.category}
+              fallbackSubtitle="Truffle image"
+            />
           </div>
 
           {/* Details */}

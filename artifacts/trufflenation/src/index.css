@@ -164,3 +164,13 @@
     @apply font-serif tracking-tight;
   }
 }
+
+/* Leaflet: inherit typography; keep popups readable above tiles */
+.leaflet-container {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  z-index: 0;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 0;
+}

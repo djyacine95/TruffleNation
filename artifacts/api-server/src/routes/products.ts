@@ -21,7 +21,7 @@ router.get("/products", async (req, res): Promise<void> => {
   }
   const { category, sellerId, minPrice, maxPrice, inStock, search } = query.data;
 
-  const conditions = [];
+  const conditions = [eq(productsTable.isAvailable, true)];
   if (category) conditions.push(eq(productsTable.category, category));
   if (sellerId) conditions.push(eq(productsTable.sellerId, Number(sellerId)));
   if (minPrice != null) conditions.push(gte(productsTable.pricePerGram, minPrice));

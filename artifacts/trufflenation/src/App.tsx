@@ -2,7 +2,7 @@ import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk, useAuth } from "@clerk/react";
+import { ClerkProvider, Show, useClerk, useAuth } from "@clerk/react";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { useEffect, useRef } from "react";
 import { queryClient } from "@/lib/queryClient";
@@ -19,6 +19,16 @@ import SellNewPage from "@/pages/sell-new";
 import SellEditPage from "@/pages/sell-edit";
 import SellersPage from "@/pages/sellers";
 import SellerProfilePage from "@/pages/seller-profile";
+import TrufflesGuidePage from "@/pages/truffles-guide";
+import TruffleMapPage from "@/pages/truffle-map";
+import TrufflesVideosPage from "@/pages/truffles-videos";
+import ShippingPolicyPage from "@/pages/shipping-policy";
+import AuthenticityGuaranteePage from "@/pages/authenticity-guarantee";
+import ContactPage from "@/pages/contact";
+import AuthNotConfiguredPage from "@/pages/auth-not-configured";
+import AuthSignInPage from "@/pages/auth-sign-in";
+import AuthSignUpPage from "@/pages/auth-sign-up";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
@@ -29,22 +39,6 @@ function stripBase(path: string): string {
   return basePath && path.startsWith(basePath)
     ? path.slice(basePath.length) || "/"
     : path;
-}
-
-function SignInPage() {
-  return (
-    <div className="flex justify-center mt-16 px-4">
-      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
-    </div>
-  );
-}
-
-function SignUpPage() {
-  return (
-    <div className="flex justify-center mt-16 px-4">
-      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
-    </div>
-  );
 }
 
 function ClerkQueryClientCacheInvalidator() {
@@ -80,7 +74,9 @@ function ClerkAuthTokenSync() {
 }
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const [, setLocation] = useLocation();
+  if (!clerkPubKey) {
+    return <AuthNotConfiguredPage />;
+  }
 
   return (
     <>
@@ -95,52 +91,63 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 }
 
 function HomeRedirectBack() {
-  const [, setLocation] = useLocation();
+  const [path, setLocation] = useLocation();
   useEffect(() => {
-    setLocation("/sign-in");
-  }, [setLocation]);
-  return null;
+    setLocation(`/sign-in?redirect=${encodeURIComponent(path)}`);
+  }, [path, setLocation]);
+  return (
+    <div className="min-h-[50vh] flex flex-col items-center justify-center gap-2 px-4 text-muted-foreground text-sm">
+      <p>Redirecting to sign in…</p>
+    </div>
+  );
+}
+
+function AppRoutes() {
+  const SignInComponent = clerkPubKey ? AuthSignInPage : AuthNotConfiguredPage;
+  const SignUpComponent = clerkPubKey ? AuthSignUpPage : AuthNotConfiguredPage;
+
+  return (
+    <Switch>
+      <Route path="/" component={LandingPage} />
+      <Route path="/shop" component={ShopPage} />
+      <Route path="/shop/:id" component={ProductPage} />
+      <Route path="/sellers" component={SellersPage} />
+      <Route path="/sellers/:id" component={SellerProfilePage} />
+      <Route path="/truffles/videos" component={TrufflesVideosPage} />
+      <Route path="/truffles" component={TrufflesGuidePage} />
+      <Route path="/truffle-map" component={TruffleMapPage} />
+      <Route path="/shipping-policy" component={ShippingPolicyPage} />
+      <Route path="/authenticity-guarantee" component={AuthenticityGuaranteePage} />
+      <Route path="/contact" component={ContactPage} />
+      <Route path="/sign-in/*?" component={SignInComponent} />
+      <Route path="/sign-up/*?" component={SignUpComponent} />
+      <Route path="/cart" component={() => <ProtectedRoute component={CartPage} />} />
+      <Route path="/orders" component={() => <ProtectedRoute component={OrdersPage} />} />
+      <Route path="/orders/:id" component={() => <ProtectedRoute component={OrderDetailPage} />} />
+      <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
+      <Route path="/sell" component={() => <ProtectedRoute component={SellPage} />} />
+      <Route path="/sell/new" component={() => <ProtectedRoute component={SellNewPage} />} />
+      <Route path="/sell/:id/edit" component={() => <ProtectedRoute component={SellEditPage} />} />
+      <Route component={NotFound} />
+    </Switch>
+  );
 }
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
 
-  if (!clerkPubKey) {
-    return (
-      <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold text-destructive">Authentication Not Configured</h1>
-        <p className="mt-4">Please set up Clerk Auth using the workspace tool.</p>
-      </div>
-    );
-  }
-
   return (
     <ClerkProvider
       publishableKey={clerkPubKey}
       proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
       routerPush={(to) => setLocation(stripBase(to))}
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <ClerkAuthTokenSync />
-        <Switch>
-          <Route path="/" component={LandingPage} />
-          <Route path="/shop" component={ShopPage} />
-          <Route path="/shop/:id" component={ProductPage} />
-          <Route path="/sellers" component={SellersPage} />
-          <Route path="/sellers/:id" component={SellerProfilePage} />
-          <Route path="/sign-in/*?" component={SignInPage} />
-          <Route path="/sign-up/*?" component={SignUpPage} />
-          <Route path="/cart" component={() => <ProtectedRoute component={CartPage} />} />
-          <Route path="/orders" component={() => <ProtectedRoute component={OrdersPage} />} />
-          <Route path="/orders/:id" component={() => <ProtectedRoute component={OrderDetailPage} />} />
-          <Route path="/dashboard" component={() => <ProtectedRoute component={DashboardPage} />} />
-          <Route path="/sell" component={() => <ProtectedRoute component={SellPage} />} />
-          <Route path="/sell/new" component={() => <ProtectedRoute component={SellNewPage} />} />
-          <Route path="/sell/:id/edit" component={() => <ProtectedRoute component={SellEditPage} />} />
-          <Route component={NotFound} />
-        </Switch>
+        <AppRoutes />
       </QueryClientProvider>
     </ClerkProvider>
   );
@@ -150,7 +157,13 @@ function App() {
   return (
     <WouterRouter base={basePath}>
       <TooltipProvider>
-        <ClerkProviderWithRoutes />
+        {clerkPubKey ? (
+          <ClerkProviderWithRoutes />
+        ) : (
+          <QueryClientProvider client={queryClient}>
+            <AppRoutes />
+          </QueryClientProvider>
+        )}
         <Toaster />
       </TooltipProvider>
     </WouterRouter>

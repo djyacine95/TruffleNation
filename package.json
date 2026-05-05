@@ -16,6 +16,7 @@
     "dev:api": "npm run dev --workspace=@workspace/api-server",
     "dev:web": "npm run dev --workspace=@workspace/trufflenation",
     "db:push": "npm run push --workspace=@workspace/db",
+    "db:seed": "npm run seed-db --workspace=@workspace/scripts",
     "codegen": "npm run codegen --workspace=@workspace/api-spec"
   },
   "private": true,

@@ -75,11 +75,11 @@ This runs `drizzle-kit push` against your `DATABASE_URL`.
 ### 4. (Optional) Seed the database
 
 ```bash
-pnpm --filter @workspace/db run seed
-# or: npm run seed --workspace=@workspace/db
+pnpm db:seed
+# or: npm run db:seed
 ```
 
-This adds 3 demo sellers and 8 truffle product listings.
+This adds demo sellers and truffle product listings.
 
 ### 5. Start the development servers
 
@@ -94,6 +94,21 @@ PORT=3000 BASE_PATH=/ pnpm dev:web
 ```
 
 Then open [http://localhost:3000](http://localhost:3000).
+
+### Docker optional
+
+You do **not** need Docker to run this project. Any reachable PostgreSQL instance works:
+
+- local PostgreSQL service (Homebrew/Postgres.app/etc),
+- hosted Postgres (Neon/Supabase/Railway),
+- Docker Postgres (optional convenience only).
+
+Just set `DATABASE_URL` in `.env`, then run:
+
+```bash
+npm run db:push
+npm run db:seed
+```
 
 ---
 
@@ -169,6 +184,41 @@ Or use Neon's SQL editor to verify the schema.
 | `pnpm db:push` / `npm run db:push` | Sync Drizzle schema to the database |
 | `pnpm codegen` / `npm run codegen` | Regenerate API client hooks from OpenAPI spec |
 | `pnpm typecheck` / `npm run typecheck` | Run TypeScript checks across all packages |
+
+---
+
+## Presentation Guide
+
+### What to demo (5-8 minutes)
+
+1. **Landing + Catalog**
+   - Show featured listings, filters, and category browsing.
+   - Mention API-backed inventory and live query filtering.
+2. **Guide + Seasonal Map + Videos**
+   - Open `/truffles`, `/truffle-map`, `/truffles/videos`.
+   - Explain educational content + global season planning.
+3. **Auth + Buyer Flow**
+   - Sign in, add to cart, complete checkout form.
+   - Show orders list and order detail.
+4. **Order cancellation**
+   - Demonstrate buyer cancel (pending/confirmed only).
+   - Mention seller fulfillment updates and server-side guardrails.
+5. **Support pages**
+   - Show shipping policy, authenticity guarantee, and contact page.
+
+### Technical highlights
+
+- Monorepo with npm workspaces (`artifacts/*`, `lib/*`, `scripts`)
+- React 19 + Vite frontend, Tailwind v4 + shadcn/ui components
+- Express 5 API with typed request/response schemas from OpenAPI
+- React Query hooks generated via Orval (`@workspace/api-client-react`)
+- Drizzle ORM + PostgreSQL for schema and data access
+- Clerk authentication for protected buyer/seller routes
+
+### Map note
+
+Current implementation uses Leaflet + OpenStreetMap (free and simple).  
+If you want more polished vector maps and smoother styling control, **MapLibre GL** is the best next upgrade path.
 
 ---
 

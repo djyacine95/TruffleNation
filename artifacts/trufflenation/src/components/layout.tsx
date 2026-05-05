@@ -1,23 +1,71 @@
 import { Link } from "wouter";
-import { Show, useClerk } from "@clerk/react";
+import { Show, UserButton } from "@clerk/react";
 import { Button } from "@/components/ui/button";
 
-export function Navbar() {
-  const { signOut } = useClerk();
+const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
 
+function NavbarWithoutClerk() {
+  return (
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <span className="font-serif text-2xl font-bold text-primary">TruffleNation</span>
+        </Link>
+
+        <nav className="flex items-center gap-4 md:gap-6 text-sm font-medium text-muted-foreground min-w-0">
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/shop" className="hover:text-primary transition-colors">Catalog</Link>
+            <Link href="/sellers" className="hover:text-primary transition-colors">Sellers</Link>
+            <Link href="/truffles" className="hover:text-primary transition-colors">Truffle guide</Link>
+            <Link href="/truffle-map" className="hover:text-primary transition-colors">Seasonal map</Link>
+            <Link href="/truffles/videos" className="hover:text-primary transition-colors">Videos</Link>
+          </div>
+          <div className="flex md:hidden items-center gap-3 text-xs uppercase tracking-wide">
+            <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
+            <Link href="/truffles" className="hover:text-primary transition-colors">Guide</Link>
+            <Link href="/truffle-map" className="hover:text-primary transition-colors">Map</Link>
+            <Link href="/truffles/videos" className="hover:text-primary transition-colors">Video</Link>
+          </div>
+        </nav>
+
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+          <span className="hidden sm:inline text-xs text-muted-foreground max-w-[140px] truncate" title="Add VITE_CLERK_PUBLISHABLE_KEY to enable sign-in">
+            Dev: no Clerk key
+          </span>
+          <Link href="/sign-in" className="text-sm font-medium hover:text-primary transition-colors whitespace-nowrap">
+            Sign In
+          </Link>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function NavbarWithClerk() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <span className="font-serif text-2xl font-bold text-primary">TruffleNation</span>
         </Link>
-        
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-          <Link href="/shop" className="hover:text-primary transition-colors">Catalog</Link>
-          <Link href="/sellers" className="hover:text-primary transition-colors">Sellers</Link>
+
+        <nav className="flex items-center gap-4 md:gap-6 text-sm font-medium text-muted-foreground">
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/shop" className="hover:text-primary transition-colors">Catalog</Link>
+            <Link href="/sellers" className="hover:text-primary transition-colors">Sellers</Link>
+            <Link href="/truffles" className="hover:text-primary transition-colors">Truffle guide</Link>
+            <Link href="/truffle-map" className="hover:text-primary transition-colors">Seasonal map</Link>
+            <Link href="/truffles/videos" className="hover:text-primary transition-colors">Videos</Link>
+          </div>
+          <div className="flex md:hidden items-center gap-3 text-xs uppercase tracking-wide">
+            <Link href="/shop" className="hover:text-primary transition-colors">Shop</Link>
+            <Link href="/truffles" className="hover:text-primary transition-colors">Guide</Link>
+            <Link href="/truffle-map" className="hover:text-primary transition-colors">Map</Link>
+            <Link href="/truffles/videos" className="hover:text-primary transition-colors">Video</Link>
+          </div>
         </nav>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <Show when="signed-out">
             <Link href="/sign-in" className="text-sm font-medium hover:text-primary transition-colors">
               Sign In
@@ -33,14 +81,26 @@ export function Navbar() {
             <Link href="/cart" className="text-sm font-medium hover:text-primary transition-colors">
               Cart
             </Link>
-            <Button variant="outline" className="rounded-none" onClick={() => signOut()}>
-              Sign Out
-            </Button>
+            <UserButton
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  avatarBox: "h-9 w-9 rounded-none ring-1 ring-border",
+                },
+              }}
+            />
           </Show>
         </div>
       </div>
     </header>
   );
+}
+
+export function Navbar() {
+  if (!clerkPublishableKey) {
+    return <NavbarWithoutClerk />;
+  }
+  return <NavbarWithClerk />;
 }
 
 export function Footer() {
@@ -61,10 +121,28 @@ export function Footer() {
             <Link href="/sell" className="text-muted-foreground hover:text-primary transition-colors">Become a Seller</Link>
           </div>
           <div className="flex flex-col gap-3 text-sm">
+            <span className="font-semibold text-foreground">Discover</span>
+            <Link href="/truffles" className="text-muted-foreground hover:text-primary transition-colors">
+              About truffles
+            </Link>
+            <Link href="/truffle-map" className="text-muted-foreground hover:text-primary transition-colors">
+              Seasonal world map
+            </Link>
+            <Link href="/truffles/videos" className="text-muted-foreground hover:text-primary transition-colors">
+              Video library
+            </Link>
+          </div>
+          <div className="flex flex-col gap-3 text-sm">
             <span className="font-semibold text-foreground">Support</span>
-            <span className="text-muted-foreground cursor-not-allowed">Shipping Policy</span>
-            <span className="text-muted-foreground cursor-not-allowed">Authenticity Guarantee</span>
-            <span className="text-muted-foreground cursor-not-allowed">Contact Us</span>
+            <Link href="/shipping-policy" className="text-muted-foreground hover:text-primary transition-colors">
+              Shipping policy
+            </Link>
+            <Link href="/authenticity-guarantee" className="text-muted-foreground hover:text-primary transition-colors">
+              Authenticity guarantee
+            </Link>
+            <Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">
+              Contact us
+            </Link>
           </div>
         </div>
       </div>

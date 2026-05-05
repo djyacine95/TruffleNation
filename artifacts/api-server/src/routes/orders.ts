@@ -172,9 +172,44 @@ router.patch("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     return;
   }
 
+  const terminalStatuses = ["delivered", "cancelled"] as const;
+  if (terminalStatuses.includes(existing.status as (typeof terminalStatuses)[number])) {
+    res.status(400).json({ error: "This order cannot be changed anymore." });
+    return;
+  }
+
+  const nextStatus = parsed.data.status;
+  if (nextStatus === existing.status) {
+    const unchanged = await getOrderWithItems(params.data.id);
+    res.json(unchanged);
+    return;
+  }
+
+  const isBuyer = existing.buyerUserId === userId;
+  const isSeller = existing.sellerUserId === userId;
+
+  if (nextStatus === "cancelled") {
+    const buyerMayCancel = isBuyer && (existing.status === "pending" || existing.status === "confirmed");
+    const sellerMayCancel =
+      isSeller &&
+      (existing.status === "pending" ||
+        existing.status === "confirmed" ||
+        existing.status === "processing" ||
+        existing.status === "shipped");
+    if (!buyerMayCancel && !sellerMayCancel) {
+      res.status(403).json({
+        error: "This order cannot be cancelled at its current stage.",
+      });
+      return;
+    }
+  } else if (!isSeller) {
+    res.status(403).json({ error: "Only the seller can update fulfillment status." });
+    return;
+  }
+
   await db
     .update(ordersTable)
-    .set({ status: parsed.data.status as any })
+    .set({ status: nextStatus as (typeof existing.status) })
     .where(eq(ordersTable.id, params.data.id));
 
   const order = await getOrderWithItems(params.data.id);
